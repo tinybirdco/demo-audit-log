@@ -1,0 +1,70 @@
+DESCRIPTION >
+	Returns the __number of each kind of event__ grouped by hour
+
+
+NODE events_hour
+SQL >
+
+    %
+    SELECT 
+      toStartOfMinute(datetime) tf,
+      event 
+      FROM audit_log_hfi
+    WHERE 1=1
+    {%if defined(company_id) and company_id!='All'%}
+    AND company_id = {{Int16(company_id, description="Company id")}}
+    {%end%}
+    {%if defined(start_date) and defined(end_date)%}
+    AND toDateTime(datetime) BETWEEN 
+    toDateTime({{DateTime(start_date, description="Start date. Format YYYY-MM-DD HH:MM:SS", required=False)}}) 
+    AND toDateTime({{DateTime(end_date, description="End date. Format YYYY-MM-DD HH:MM:SS", required=False)}})
+    {%elif defined(start_date)%}
+    AND toDateTime(datetime) >= toDateTime({{start_date}})
+    {%elif defined(end_date)%}
+    AND toDateTime(datetime) <= toDateTime({{end_date}})
+    {%end%}
+
+
+
+NODE count_colums
+SQL >
+
+    SELECT tf, event, count() as total_events FROM events_hour
+    GROUP BY tf, event
+    ORDER BY tf asc, event asc
+
+
+
+NODE array_col_events
+SQL >
+
+    SELECT tf, groupArray(event) enarr, groupArray(total_events) tearr 
+    FROM count_colums
+    GROUP BY tf
+
+
+
+NODE one_col_per_event
+SQL >
+
+    SELECT 
+      tf,
+      tearr[indexOf(enarr, 'project_created')] AS project_created,
+      tearr[indexOf(enarr, 'project_updated')] AS project_updated,
+      tearr[indexOf(enarr, 'project_deleted')] AS project_deleted,
+      tearr[indexOf(enarr, 'folder_created')] AS folder_created,
+      tearr[indexOf(enarr, 'folder_updated')] AS folder_updated,
+      tearr[indexOf(enarr, 'folder_deleted')] AS folder_deleted,
+      tearr[indexOf(enarr, 'file_created')] AS file_created,
+      tearr[indexOf(enarr, 'file_updated')] AS file_updated,
+      tearr[indexOf(enarr, 'file_deleted')] AS file_deleted,
+      tearr[indexOf(enarr, 'group_created')] AS group_created,
+      tearr[indexOf(enarr, 'group_updated')] AS group_updated,
+      tearr[indexOf(enarr, 'group_deleted')] AS group_deleted,
+      tearr[indexOf(enarr, 'user_created')] AS user_created,
+      tearr[indexOf(enarr, 'user_updated')] AS user_updated,
+      tearr[indexOf(enarr, 'user_deleted')] AS user_deleted
+    FROM array_col_events
+    order by tf ASC
+
+

@@ -1,0 +1,9 @@
+SCHEMA >
+    `company_id` Int8,
+    `name` LowCardinality(String),
+    `size` UInt32,
+    `plan` LowCardinality(String)
+
+ENGINE "MergeTree"
+ENGINE_PARTITION_KEY "plan"
+ENGINE_SORTING_KEY "company_id, plan, size"
