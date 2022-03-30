@@ -46,18 +46,18 @@ Your data project is ready for realtime analysis. You can check in the UI's data
 
 In the `/datasources` folder we have two datasources:
 - audit_log_hfi: where we'll be sending audit log events with a python script
-- companies: where we will store the information about the companies. The content (a CSV file) is in the fixtures subfolder
+- companies: where we will store the information about the companies. The content (a CSV file) is in the fixtures subfolder.
 
 And three .pipe files in the `/endpoints` folder:
 - api_audit_log_enriched: a pipe that counts the number of events per company from _audit_log_hfi_ and joins the result with the info in _companies_
 - api_audit_log_params: en example with several [dynamic parameters](https://guides.tinybird.co/guide/using-dynamic-parameters-for-changing-aggregation-types-on-the-fly)
-- api_count_per_type: an example of pivoting rows ro columns using arrays
+- api_count_per_type: an example of pivoting rows to columns using arrays.
 
-Note: typically, in big projects, we split the .pipe files in two folders: /pipes and /endpoits, with `/pipes` being the one where we store the pipes ending in a datasource, that is, [materialized views](https://guides.tinybird.co/guide/materialized-views), and `/endpoints` for the pipes that end in API endpoints. You'll get there eventutally.
+Note: typically, in big projects, we split the .pipe files in two folders: /pipes and /endpoints, with `/pipes` being the one where we store the pipes ending in a datasource, that is, [materialized views](https://guides.tinybird.co/guide/materialized-views), and `/endpoints` for the pipes that end in API endpoints. You'll get there eventually!
 
 ## Ingesting
 
-Let's push some data through our [HFI endpoint](https://www.tinybird.co/guide/high-frequency-ingestion)
+Let's push some data through our [HFI endpoint](https://www.tinybird.co/guide/high-frequency-ingestion).
 
 For that purpose we have created a python script to generate and send dummy events.
 
@@ -70,7 +70,7 @@ Feel free to play with the parameters. You can check them with `python3 data-gen
 
 ## Token security
 
-You now have your datasources and pipes that end in API endpoints. The endpoints need a [token](https://www.tinybird.co/guide/serverless-analytics-api) to be consumed and it's not a good idea to expose your admin token, so let's create one.
+You now have your datasources and pipes that end in API endpoints. The endpoints need a [token](https://www.tinybird.co/guide/serverless-analytics-api) to be consumed. It's not a good idea to expose your admin token, so let's create one.
 
 ```bash
 TOKEN=$(cat .tinyb | jq '.token'| tr -d '"')
@@ -84,7 +84,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 $HOST/v0/tokens/
 ```
 
-You should receive a response like this one:
+You should receive a response similar to this:
 
 ```json
 {
@@ -110,7 +110,7 @@ You should receive a response like this one:
 }
 ```
 
-In case you wanted to create a token to share just `api_audit_log_params` with, let's say, the company with company_id 1, you can do so with the row level security:
+If you want to create a token to share just `api_audit_log_params` with, let's say, the company with company_id 1, you can do so with the row level security:
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
@@ -120,4 +120,4 @@ curl -H "Authorization: Bearer $TOKEN" \
 $HOST/v0/tokens/
 ```
 
-This is just an example of some Tinybird features. If you had any doubt, do not hesitate to contact us in our community slack!
+This is just an example of some of the Tinybird features. If you have any doubts, do not hesitate to contact us in our community [Slack](https://join.slack.com/t/tinybird-community/shared_invite/zt-yi4hb0ht-IXn9iVuewXIs3QXVqKS~NQ)!
