@@ -2,7 +2,7 @@
 
 ## Intro
 
-This repo contains the data project —[datasources](./datasources), [pipes](./pipes), [endpoints](./endpoints)— and [data-generator](./data-generator) scripts of the audit log demo.
+This repo contains the data project —[datasources](./datasources), and [endpoints](./endpoints)— and [data-generator](./data-generator) scripts for the audit log demo.
 
 ## Working with tinybird CLI
 
@@ -29,6 +29,31 @@ tb push --fixtures
 ```
   
 Your data project is ready for realtime analysis. You can check in the UI's data flow how it looks like.
+
+## Project description
+
+```bash
+├── datasources
+│   ├── audit_log_hfi.datasource
+│   ├── companies.datasource
+│   └── fixtures
+│       └── companies.csv
+├── endpoints
+│   ├── api_audit_log_enriched.pipe
+│   ├── api_audit_log_params.pipe
+│   └── api_count_per_type.pipe
+```
+
+In the `/datasources` folder we have two datasources:
+- audit_log_hfi: where we'll be sending audit log events with a python script
+- companies: where we will store the information about the companies. The content (a CSV file) is in the fixtures subfolder
+
+And three .pipe files in the `/endpoints` folder:
+- api_audit_log_enriched: a pipe that counts the number of events per company from _audit_log_hfi_ and joins the result with the info in _companies_
+- api_audit_log_params: en example with several [dynamic parameters](https://guides.tinybird.co/guide/using-dynamic-parameters-for-changing-aggregation-types-on-the-fly)
+- api_count_per_type: an example of pivoting rows ro columns using arrays
+
+Note: typically, in big projects, we split the .pipe files in two folders: /pipes and /endpoits, with `/pipes` being the one where we store the pipes ending in a datasource, that is, [materialized views](https://guides.tinybird.co/guide/materialized-views), and `/endpoints` for the pipes that end in API endpoints. You'll get there eventutally.
 
 ## Ingesting
 
