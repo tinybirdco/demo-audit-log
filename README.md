@@ -2,6 +2,8 @@
 
 This repository contains the data project —[datasources](./datasources), and [endpoints](./endpoints)— and [data-generator](./data-generator) scripts for an audit log example of using Tinybird.
 
+Check out this 5 minute [video](https://youtu.be/NlGtrTGH9dQ) to see how to work with audit logs and Tinybird.
+
 To clone the repository:
 
 `git clone git@github.com:tinybirdco/demo-audit-log.git`
