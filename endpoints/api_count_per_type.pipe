@@ -9,7 +9,7 @@ SQL >
     SELECT 
       toStartOfMinute(datetime) tf,
       event 
-      FROM audit_log_hfi
+      FROM kafka_audit_log
     WHERE 1=1
     {%if defined(company_id) and company_id!='All'%}
     AND company_id = {{Int16(company_id, description="Company id")}}

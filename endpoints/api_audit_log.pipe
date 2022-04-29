@@ -1,0 +1,33 @@
+NODE kafka_audit_log_pipe_4126_0
+SQL >
+
+    %
+    SELECT 
+          company_id, 
+          payload_author as author,
+          event, 
+          datetime
+        FROM kafka_audit_log
+        WHERE 1=1
+        {%if defined(company_id) and company_id!='All'%}
+        AND company_id = {{Int16(company_id, description="Company id")}}
+        {%end%}
+        {%if defined(event_like)%}
+        AND event like concat('%',{{String(event_like, description="part of the event name")}},'%')
+        {%elif defined(event_exact) and event_exact != 'All'%}
+        AND event ={{String(event_exact, description="exact match of event name")}}
+        {%end%}
+        {%if defined(start_date) and defined(end_date)%}
+        AND toDateTime(datetime) BETWEEN 
+        toDateTime({{DateTime(start_date, description="Start date. Format YYYY-MM-DD HH:MM:SS")}}) 
+        AND toDateTime({{DateTime(end_date, description="Start date. Format YYYY-MM-DD HH:MM:SS")}})
+        {%elif defined(start_date)%}
+        AND toDateTime(datetime) >= toDateTime({{start_date}})
+        {%elif defined(end_date)%}
+        AND toDateTime(datetime) <= toDateTime({{end_date}})
+        {%end%}
+        ORDER BY datetime desc
+        LIMIT {{Int32(page_size, 100)}}
+        OFFSET {{Int32(page, 0) * Int32(page_size, 100)}}
+
+

@@ -7,7 +7,7 @@ SQL >
   SELECT 
     company_id, 
     count() as events 
-  FROM audit_log_hfi
+  FROM kafka_audit_log
   GROUP BY company_id
 
 NODE enriching_info

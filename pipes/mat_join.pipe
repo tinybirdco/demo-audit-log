@@ -1,0 +1,22 @@
+NODE kafka_audit_log_join_mv
+SQL >
+
+    SELECT 
+        kafka_audit_log.datetime, 
+        kafka_audit_log.company_id, 
+        companies.name,
+        kafka_audit_log.event, 
+        kafka_audit_log.device_OS,
+        kafka_audit_log.device_browser, 
+        companies.size, 
+        companies.plan
+    FROM kafka_audit_log
+    JOIN companies
+    USING company_id
+
+TYPE materialized
+DATASOURCE kafka_audit_log_join
+ENGINE "MergeTree"
+ENGINE_PARTITION_KEY "toYYYYMM(datetime)"
+ENGINE_SORTING_KEY "datetime, intHash32(size)"
+

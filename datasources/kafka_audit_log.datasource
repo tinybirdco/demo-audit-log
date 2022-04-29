@@ -1,0 +1,25 @@
+SCHEMA >
+    `value` String,
+    `topic` LowCardinality(String),
+    `partition` Int16,
+    `offset` Int64,
+    `timestamp` DateTime,
+    `key` String,
+    `company_id` Int8 `json:$.company_id`,
+    `datetime` DateTime64(3) `json:$.datetime`,
+    `device_OS` String `json:$.device.OS`,
+    `device_browser` String `json:$.device.browser`,
+    `event` String `json:$.event`,
+    `payload_author` String `json:$.payload.author`,
+    `payload_entity_id` String `json:$.payload.entity_id`
+
+ENGINE "MergeTree"
+ENGINE_PARTITION_KEY "toYYYYMM(timestamp)"
+ENGINE_SORTING_KEY "timestamp"
+
+KAFKA_CONNECTION_NAME 'demo_audit_log_connection'
+KAFKA_TOPIC 'audit_log_demo'
+KAFKA_GROUP_ID 'live-sessions'
+KAFKA_AUTO_OFFSET_RESET 'earliest'
+KAFKA_STORE_RAW_VALUE 'True'
+KAFKA_TARGET_PARTITIONS 'auto'

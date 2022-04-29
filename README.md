@@ -66,18 +66,27 @@ Your data project is ready for realtime analysis. You can check the UI's Data fl
 
 ![Data flow](data_flow.jpg?raw=true "Data flow in UI")
 
-## Ingesting data using high-frequency ingestion (HFI)
+## Ingesting data using kafka
 
-Let's add some data through the [HFI endpoint](https://www.tinybird.co/guide/high-frequency-ingestion).
-
-To do that we have created a python script to generate and send dummy events.
+First, set your environment variables in a .env file —you can base yours in the _.env_sample_ file. 
+Then, let's read the environment variables form the .env file
 
 ```bash
-pip install click faker
-python3 data-generator/audit_log_events.py --repeat 100
+cat ./.env | while read line; do
+    export $line
+    echo $line
+done
 ```
 
-Feel free to play with the parameters. You can check them with `python3 data-generator/audit_log_events.py --help`
+Time to start the generator
+
+```bash
+pip install click faker confluent_kafka
+
+python3 data-generator/audit_log_kafka.py --bootstrap-servers $KAFKA_BOOTSTRAP_SERVERS --sasl_plain_username $KAFKA_KEY --sasl_plain_password $KAFKA_SECRET
+```
+
+Feel free to play with the parameters. You can check them with `python3 data-generator/audit_log_kafka.py --help`
 
 ## Token security
 
@@ -125,13 +134,13 @@ You will receive a response similar to this:
 }
 ```
 
-If you want to create a token to share just `api_audit_log_params` with, let's say, the company with company_id 1, you can do so with the **row level security**:
+If you want to create a token to share just `api_audit_log_params` with, let's say, the company with company_id 1, you can do so with the __row level security__:
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
 -d "name=comp_1_token" \
 -d "scope=PIPES:READ:api_audit_log_params" \
--d "scope=DATASOURCES:READ:audit_log_hfi:company_id=1" \
+-d "scope=DATASOURCES:READ:kafka_audit_log:company_id=1" \
 $HOST/v0/tokens/
 ```
 

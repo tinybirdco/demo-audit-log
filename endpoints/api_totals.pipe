@@ -1,0 +1,18 @@
+NODE values
+SQL >
+
+    SELECT 
+          toString(count()) as total_events,
+          toString(min(datetime)) min_datetime,
+          toString(max(datetime)) max_datetime
+        FROM kafka_audit_log
+
+
+
+NODE api_totals_1
+SQL >
+
+    SELECT concat(total_events,' from ',min_datetime,' to ',max_datetime) as totals
+        FROM values
+
+
