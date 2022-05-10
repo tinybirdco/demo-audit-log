@@ -1,3 +1,4 @@
+
 SCHEMA >
     `value` String,
     `topic` LowCardinality(String),

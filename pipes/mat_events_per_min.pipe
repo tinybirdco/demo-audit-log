@@ -1,0 +1,19 @@
+NODE mat_events_per_min_node
+SQL >
+
+    SELECT 
+      toStartOfMinute(datetime) minute,
+      name,
+      event,
+      count() total_events
+    FROM kafka_audit_log
+    JOIN companies 
+    USING company_id
+    GROUP BY minute, name, event
+
+TYPE materialized
+DATASOURCE events_per_min_mv
+ENGINE "AggregatingMergeTree"
+ENGINE_PARTITION_KEY "toYYYYMM(minute)"
+ENGINE_SORTING_KEY "name, minute, event"
+

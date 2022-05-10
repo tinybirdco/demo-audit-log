@@ -1,9 +1,9 @@
 NODE count_logs
 SQL >
 
-    SELECT 
-      company_id, 
-      count() as events 
+    SELECT
+        company_id,
+        count() AS events
     FROM kafka_audit_log
     GROUP BY company_id
 
@@ -13,11 +13,10 @@ NODE endpoint
 SQL >
 
     SELECT
-      name,
-      events,
-      plan
+        name,
+        events,
+        plan
     FROM count_logs
-    JOIN companies
-    USING company_id
+    INNER JOIN companies USING (company_id)
 
 

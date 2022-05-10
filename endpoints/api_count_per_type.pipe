@@ -1,70 +1,112 @@
+TOKEN ui_token READ
+
 DESCRIPTION >
 	Returns the __number of each kind of event__ grouped by hour
 
 
-NODE events_hour
+NODE filtered_events
 SQL >
 
     %
-    SELECT 
-      toStartOfMinute(datetime) tf,
-      event 
+      SELECT 
+        toStartOfMinute(datetime) tf,
+        event 
       FROM kafka_audit_log
-    WHERE 1=1
-    {%if defined(company_id) and company_id!='All'%}
-    AND company_id = {{Int16(company_id, description="Company id")}}
-    {%end%}
-    {%if defined(start_date) and defined(end_date)%}
-    AND toDateTime(datetime) BETWEEN 
-    toDateTime({{DateTime(start_date, description="Start date. Format YYYY-MM-DD HH:MM:SS", required=False)}}) 
-    AND toDateTime({{DateTime(end_date, description="End date. Format YYYY-MM-DD HH:MM:SS", required=False)}})
-    {%elif defined(start_date)%}
-    AND toDateTime(datetime) >= toDateTime({{start_date}})
-    {%elif defined(end_date)%}
-    AND toDateTime(datetime) <= toDateTime({{end_date}})
-    {%end%}
+      WHERE 1=1
+      {%if defined(company_id) and company_id!='All'%}
+        AND company_id in (select company_id from companies where name = {{sql_unescape(String(company_id, description="Company id"))}})
+      {%end%}
+      {%if defined(start_date) and defined(end_date)%}
+        AND toDateTime(datetime) BETWEEN 
+          toDateTime({{DateTime(start_date, description="Start date. Format YYYY-MM-DD HH:MM:SS", required=False)}}) 
+          AND toDateTime({{DateTime(end_date, description="End date. Format YYYY-MM-DD HH:MM:SS", required=False)}})
+      {%end%}
 
 
 
 NODE count_colums
 SQL >
 
-    SELECT tf, event, count() as total_events FROM events_hour
+    SELECT
+        tf,
+        event,
+        count() AS total_events
+    FROM filtered_events
+    GROUP BY
+        tf,
+        event
+    ORDER BY
+        tf ASC,
+        event ASC
+
+
+
+NODE filter_and_count_from_mv
+DESCRIPTION >
+    this node retrieves the desired columns from the mat view
+    Note: we cannot rely on AggregatingMergeTree to only have one row per minute every time we call it, that's why we need to do the sum(total_events) and group by
+
+SQL >
+
+    %
+    SELECT 
+      minute tf,
+      event,
+      sum(total_events) total_events
+    FROM events_per_min_mv
+    WHERE 1=1
+    {%if defined(company_id) and company_id!='All'%}
+      AND name = {{sql_unescape(String(company_id, description="Company id"))}})
+    {%end%}
+    {%if defined(start_date) and defined(end_date)%}
+      AND minute BETWEEN 
+        toDateTime({{DateTime(start_date, description="Start date. Format YYYY-MM-DD HH:MM:SS", required=False)}}) 
+        AND toDateTime({{DateTime(end_date, description="End date. Format YYYY-MM-DD HH:MM:SS", required=False)}})
+    {%end%}
     GROUP BY tf, event
-    ORDER BY tf asc, event asc
 
 
 
 NODE array_col_events
+DESCRIPTION >
+    creating two arrays, one with __event names__ and other with __number of events__ for that event type
+
 SQL >
 
-    SELECT tf, groupArray(event) enarr, groupArray(total_events) tearr 
-    FROM count_colums
+    SELECT
+        tf,
+        groupArray(event) AS ev_arr,
+        groupArray(total_events) AS tot_arr
+    --FROM count_colums
+    FROM filter_and_count_from_mv
     GROUP BY tf
 
 
 
 NODE one_col_per_event
+DESCRIPTION >
+    _pivoting_ from the array fields to get __one column per event type__
+
 SQL >
 
-    SELECT 
-      tf,
-      tearr[indexOf(enarr, 'project_created')] AS project_created,
-      tearr[indexOf(enarr, 'project_updated')] AS project_updated,
-      tearr[indexOf(enarr, 'project_deleted')] AS project_deleted,
-      tearr[indexOf(enarr, 'folder_created')] AS folder_created,
-      tearr[indexOf(enarr, 'folder_updated')] AS folder_updated,
-      tearr[indexOf(enarr, 'folder_deleted')] AS folder_deleted,
-      tearr[indexOf(enarr, 'file_created')] AS file_created,
-      tearr[indexOf(enarr, 'file_updated')] AS file_updated,
-      tearr[indexOf(enarr, 'file_deleted')] AS file_deleted,
-      tearr[indexOf(enarr, 'group_created')] AS group_created,
-      tearr[indexOf(enarr, 'group_updated')] AS group_updated,
-      tearr[indexOf(enarr, 'group_deleted')] AS group_deleted,
-      tearr[indexOf(enarr, 'user_created')] AS user_created,
-      tearr[indexOf(enarr, 'user_updated')] AS user_updated,
-      tearr[indexOf(enarr, 'user_deleted')] AS user_deleted
+    SELECT
+        tf,
+        tot_arr[indexOf(ev_arr, 'project_created')] AS project_created,
+        tot_arr[indexOf(ev_arr, 'project_updated')] AS project_updated,
+        tot_arr[indexOf(ev_arr, 'project_deleted')] AS project_deleted,
+        tot_arr[indexOf(ev_arr, 'folder_created')] AS folder_created,
+        tot_arr[indexOf(ev_arr, 'folder_updated')] AS folder_updated,
+        tot_arr[indexOf(ev_arr, 'folder_deleted')] AS folder_deleted,
+        tot_arr[indexOf(ev_arr, 'file_created')] AS file_created,
+        tot_arr[indexOf(ev_arr, 'file_updated')] AS file_updated,
+        tot_arr[indexOf(ev_arr, 'file_deleted')] AS file_deleted,
+        tot_arr[indexOf(ev_arr, 'group_created')] AS group_created,
+        tot_arr[indexOf(ev_arr, 'group_updated')] AS group_updated,
+        tot_arr[indexOf(ev_arr, 'group_deleted')] AS group_deleted,
+        tot_arr[indexOf(ev_arr, 'user_created')] AS user_created,
+        tot_arr[indexOf(ev_arr, 'user_updated')] AS user_updated,
+        tot_arr[indexOf(ev_arr, 'user_deleted')] AS user_deleted
     FROM array_col_events
-    order by tf ASC
+    ORDER BY tf ASC
 
 

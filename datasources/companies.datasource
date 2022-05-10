@@ -1,3 +1,4 @@
+
 SCHEMA >
     `company_id` Int8,
     `name` LowCardinality(String),

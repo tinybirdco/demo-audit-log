@@ -1,0 +1,11 @@
+# Data Source created from Pipe 'mat_events_per_min'
+
+SCHEMA >
+    `minute` DateTime('Etc/UTC'),
+    `name` LowCardinality(String),
+    `event` String,
+    `total_events` SimpleAggregateFunction(sum, UInt64)
+
+ENGINE "AggregatingMergeTree"
+ENGINE_PARTITION_KEY "toYYYYMM(minute)"
+ENGINE_SORTING_KEY "name, minute, event"

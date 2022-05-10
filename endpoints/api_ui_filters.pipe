@@ -1,0 +1,41 @@
+TOKEN ui_token READ
+
+DESCRIPTION >
+	Retrieves values for __UI filters__
+
+
+NODE company_ids
+SQL >
+
+    select 'All' values
+    union all
+    SELECT distinct name values FROM companies
+    ORDER BY name ASC
+
+
+
+NODE events
+SQL >
+
+    select 'All' values
+    union all
+    SELECT distinct toString(event) FROM kafka_audit_log
+    ORDER BY event ASC
+
+
+
+NODE endpoint
+SQL >
+
+    %
+        {% if not defined(filter) or (filter != 'companies' and filter != 'events') %}
+        {{ error('filter query param is required and needs to be companies or events') }}
+        {% end %}
+        SELECT values
+        {%if filter == 'companies'%}
+        from company_ids
+        {%else%}
+        from events
+        {%end%}
+
+

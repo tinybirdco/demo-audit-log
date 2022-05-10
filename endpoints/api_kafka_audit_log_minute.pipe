@@ -1,8 +1,0 @@
-NODE events_per_minute
-SQL >
-
-    SELECT t, sum(c) c 
-    FROM kafka_audit_log_minute_mv
-    GROUP BY t
-
-

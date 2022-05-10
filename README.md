@@ -6,9 +6,11 @@ Check out this 5 minute [video](https://youtu.be/NlGtrTGH9dQ) to see how to work
 
 To clone the repository:
 
-`git clone git@github.com:tinybirdco/demo-audit-log.git`
+```bash
+git clone --branch live-coding-session git@github.com:tinybirdco/demo-audit-log.git
 
-`cd demo-audit-log`
+cd demo-audit-log
+```
 
 ## Working with the Tinybird CLI
 
@@ -30,51 +32,53 @@ Go to your workspace, copy a token with admin rights and paste it. A new `.tinyb
 
 ```bash
 ├── datasources
-│   ├── audit_log_hfi.datasource
-│   ├── companies.datasource
-│   └── fixtures
-│       └── companies.csv
+│   ├── companies.datasource
+│   ├── enriched_events_mv.datasource
+│   ├── events_per_min_mv.datasource
+│   ├── fixtures
+│   │   └── companies.csv
+│   └── kafka_audit_log.datasource
 ├── endpoints
-│   ├── api_audit_log_enriched.pipe
-│   ├── api_audit_log_params.pipe
-│   └── api_count_per_type.pipe
+│   ├── api_audit_log.pipe
+│   ├── api_count_per_type.pipe
+│   ├── api_totals.pipe
+│   ├── api_ui_filters.pipe
+│   └── events_per_company.pipe
+├── pipes
+│   ├── mat_enriched_events.pipe
+│   └── mat_events_per_min.pipe
 ```
 
-In the `/datasources` folder we have two Data Sources:
-- audit_log_hfi: where we'll be sending audit log events with a python script
+In the `/datasources` folder we have four Data Sources:
+
+- kafka_audit_log: where we'll be consuming the audit log events from our Kafka topic
 - companies: where we will store the information about the companies. The content (a CSV file) is in the fixtures subfolder.
+- enriched_events_mv: a materialized view where we store the events adding denormalizing the company info.
+- events_per_min: a materialized view where we do an incremental rollup of all the events per type, company, and minute. They are also joined with companies to get the company name.
 
-And three .pipe files in the `/endpoints` folder:
-- api_audit_log_enriched: a pipe that counts the number of events per company from _audit_log_hfi_ and joins the result with the info in _companies_
-- api_audit_log_params: en example with several [dynamic parameters](https://guides.tinybird.co/guide/using-dynamic-parameters-for-changing-aggregation-types-on-the-fly)
+Five .pipe files in the `/endpoints` folder:
+
+- events_per_company: the first endpoint we created in our live-session.
+- api_audit_log: a pipe that retrieves a timestamp and a composed message combining some fields of the events.
+- api_totals: just the sum of every event in the kafka_audit_log datasource.
 - api_count_per_type: an example of pivoting rows to columns using arrays.
+- api_ui_filters: the endpoint used for the fronted to paint the dropdown filters.
 
-Note:
-Typically, in big projects, we split the .pipe files across two folders: /pipes and /endpoints
-- `/pipes` where we store the pipes ending in a datasource, that is, [materialized views](https://guides.tinybird.co/guide/materialized-views)
-- `/endpoints` for the pipes that end in API endpoints. 
+Two .pipe files in the `/pipes` folder:
+We usually put the .pipe files that trigger a MV into this folder and leave the rest in `/endpoints`
 
-## Pushing the data project to your Tinybird workspace
-
-Push the data project —datasources, pipes and fixtures— to your workspace.
-
-```bash
-tb push --fixtures
-```
-  
-Your data project is ready for realtime analysis. You can check the UI's Data flow to see how it looks.
-
-![Data flow](data_flow.jpg?raw=true "Data flow in UI")
+- mat_enriched_events_node: the pipe that materializes in enriched_events_mv.datasource
+- mat_events_per_min_node: the pipe that materializes the rollup in events_per_min_mv.datasource
 
 ## Ingesting data using kafka
 
-First, set your environment variables in a .env file —you can base yours in the _.env_sample_ file. 
+Set your environment variables in a .env file —you can base yours in the _.env_sample_ file.
 Then, let's read the environment variables form the .env file
 
 ```bash
 cat ./.env | while read line; do
     export $line
-    echo $line
+    # echo $line
 done
 ```
 
@@ -86,11 +90,53 @@ pip install click faker confluent_kafka
 python3 data-generator/audit_log_kafka.py --bootstrap-servers $KAFKA_BOOTSTRAP_SERVERS --sasl_plain_username $KAFKA_KEY --sasl_plain_password $KAFKA_SECRET
 ```
 
+You will be sending events like this one:
+
+```json
+{
+  "datetime": "2022-05-09T10:09:47.988915",
+  "company_id": 3,
+  "event": "folder_updated",
+  "payload": {
+    "entity_id": "4a4979f8b02a481a87c89a5a52ad5390",
+    "author": "fwebb@example.com"
+  },
+  "device": {
+    "browser": "Chrome",
+    "OS": "iOS"
+  }
+}
+```
+
 Feel free to play with the parameters. You can check them with `python3 data-generator/audit_log_kafka.py --help`
+
+You are welcome to explore and modify the [./data-generator/audit_log_kafka.py](./data-generator/audit_log_kafka.py) script too.
+
+Note: we'll assume you will have your own kafka server with a topic called _audit_log_demo_ that can be consumed with a consumer group id _live-sessions_. If that's not the case, feel free to edit the [./datasources/kafka_audit_log.datasource](./datasources/kafka_audit_log.datasource) file and call the generator with the desired topic: 
+
+`python3 data-generator/audit_log_kafka.py --topic <your_topic>`
+
+## Pushing the data project to your Tinybird workspace
+
+First, create a Kafka connection to let your datasource connect to your Kafka server. You have more details in our [docs](https://docs.tinybird.co/cli/kafka.html).
+
+```bash
+tb connection create kafka --bootstrap-servers $KAFKA_BOOTSTRAP_SERVERS --key $KAFKA_KEY --secret $KAFKA_SECRET --connection-name demo_audit_log_connection
+```
+
+Then, push the data project —datasources, pipes and fixtures— to your workspace.
+
+```bash
+tb push --fixtures
+```
+  
+Your data project is ready for realtime analysis. You can check the UI's Data flow to see how it looks.
+
+![Data flow](data_flow.png?raw=true "Data flow in UI")
 
 ## Token security
 
-You now have your Data Sources and pipes that end in API endpoints. 
+You now have your Data Sources and pipes that end in API endpoints.
 
 The endpoints need a [token](https://www.tinybird.co/guide/serverless-analytics-api) to be consumed. You should not expose your admin token, so let's create one with more limited scope.
 
@@ -102,8 +148,9 @@ HOST=$(cat .tinyb | jq '.host'| tr -d '"')
 
 curl -H "Authorization: Bearer $TOKEN" \
 -d "name=endpoints_token" \
--d "scope=PIPES:READ:api_audit_log_enriched" \
--d "scope=PIPES:READ:api_audit_log_params" \
+-d "scope=PIPES:READ:api_audit_log" \
+-d "scope=PIPES:READ:api_totals" \
+-d "scope=PIPES:READ:api_ui_filters" \
 -d "scope=PIPES:READ:api_count_per_type" \
 $HOST/v0/tokens/
 ```
@@ -116,12 +163,17 @@ You will receive a response similar to this:
     "scopes": [
         {
             "type": "PIPES:READ",
-            "resource": "api_audit_log_enriched",
+            "resource": "api_audit_log",
             "filter": ""
         },
         {
             "type": "PIPES:READ",
-            "resource": "api_audit_log_params",
+            "resource": "api_totals",
+            "filter": ""
+        },
+        {
+            "type": "PIPES:READ",
+            "resource": "api_ui_filters",
             "filter": ""
         },
         {
@@ -134,14 +186,66 @@ You will receive a response similar to this:
 }
 ```
 
-If you want to create a token to share just `api_audit_log_params` with, let's say, the company with company_id 1, you can do so with the __row level security__:
+If you want to create a token to share the endpoints that feed the dashboard with, let's say, the company with company_id 1, you can do so with the __row level security__:
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
--d "name=comp_1_token" \
--d "scope=PIPES:READ:api_audit_log_params" \
+-d "name=company_1_token" \
+-d "scope=PIPES:READ:api_audit_log" \
+-d "scope=PIPES:READ:api_totals" \
+-d "scope=PIPES:READ:api_ui_filters" \
+-d "scope=PIPES:READ:api_count_per_type" \
 -d "scope=DATASOURCES:READ:kafka_audit_log:company_id=1" \
+-d "scope=DATASOURCES:READ:companies:company_id=1" \
+-d "scope=DATASOURCES:READ:enriched_events_mv:name in (select name from companies where company_id = 1)" \
+-d "scope=DATASOURCES:READ:enriched_events_mv:name in (select name from companies where company_id = 1)" \
 $HOST/v0/tokens/
+```
+
+And now you should see the filters in your response
+
+```json
+{
+    "token": <the_token>,
+    "scopes": [
+        {
+            "type": "PIPES:READ",
+            "resource": "api_audit_log",
+            "filter": ""
+        },
+        {
+            "type": "PIPES:READ",
+            "resource": "api_totals",
+            "filter": ""
+        },
+        {
+            "type": "PIPES:READ",
+            "resource": "api_ui_filters",
+            "filter": ""
+        },
+        {
+            "type": "PIPES:READ",
+            "resource": "api_count_per_type",
+            "filter": ""
+        },
+        {
+            "type": "DATASOURCES:READ",
+            "resource": "kafka_audit_log",
+            "filter": "company_id=1"
+        },
+        {
+            "type": "DATASOURCES:READ",
+            "resource": "companies",
+            "filter": "company_id=1"
+        },
+        {
+            "type": "DATASOURCES:READ",
+            "resource": "enriched_events_mv",
+            "filter": "name in (select name from companies where company_id = 1)"
+        }
+    ],
+    "name": "company_1_token"
+}
 ```
 
 This project shows just some of the features of Tinybird. If you have any questions, come along and join our community [Slack](https://join.slack.com/t/tinybird-community/shared_invite/zt-yi4hb0ht-IXn9iVuewXIs3QXVqKS~NQ)!

@@ -1,0 +1,13 @@
+{
+  "datetime": "2022-05-09T10:09:47.988915",
+  "company_id": 3,
+  "event": "folder_updated",
+  "payload": {
+    "entity_id": "4a4979f8b02a481a87c89a5a52ad5390",
+    "author": "fwebb@example.com"
+  },
+  "device": {
+    "browser": "Chrome",
+    "OS": "iOS"
+  }
+}

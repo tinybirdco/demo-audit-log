@@ -22,8 +22,6 @@ import socket
 @click.option('--sasl_mechanism', default='PLAIN')
 @click.option('--sasl_plain_username')
 @click.option('--sasl_plain_password')
-@click.option('--utc', help='UTC datetime for tmstmp by default', type=bool, default=True)
-@click.option('--bcp', is_flag=True, default=False)
 def produce(topic,
             sample,
             sleep,
@@ -33,9 +31,8 @@ def produce(topic,
             security_protocol,
             sasl_mechanism,
             sasl_plain_username,
-            sasl_plain_password,
-            utc,
-            bcp):
+            sasl_plain_password
+            ):
   
   conf = {
     'bootstrap.servers': bootstrap_servers,
@@ -49,7 +46,6 @@ def produce(topic,
 
   producer = Producer(conf)
   fake = faker.Faker()
-  cus_emails = [fake.email() for s in range(max(10,int(sample/10)))]
 
   onqueue = -1
   t = time.time()
