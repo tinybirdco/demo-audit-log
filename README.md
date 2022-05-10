@@ -206,7 +206,7 @@ And now you should see the filters in your response
 
 ```json
 {
-    "token": <the_token>,
+    "token": "<the_token>",
     "scopes": [
         {
             "type": "PIPES:READ",
