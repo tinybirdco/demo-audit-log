@@ -1,8 +1,8 @@
 # Using Tinybird with an Audit Log
 
-This repository contains the data project —[datasources](./datasources), and [endpoints](./endpoints)— and [data-generator](./data-generator) scripts for an audit log example of using Tinybird.
+This repository contains the data project —[datasources](./datasources), [pipes](./pipes), and [endpoints](./endpoints)— and [data-generator](./data-generator) scripts for an audit log example of using Tinybird.
 
-Check out this 5 minute [video](https://youtu.be/NlGtrTGH9dQ) to see how to work with audit logs and Tinybird.
+Check out this live session demo [video](https://www.youtube.com/watch?v=C9859uVd6uc&list=PLZGPeFpwVFORWK4W-1sMWzYUcS7fOlaQC&index=1) to see how to work with audit logs from Kafka streams in Tinybird.
 
 To clone the repository:
 
