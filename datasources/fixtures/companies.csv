@@ -1,4 +1,4 @@
-company_id, name, size, plan
+company_id,name,size,plan
 1,Tinybird Co,50,Pro
 2,Auditlog Company,1500,Enterprise
 3,Example Inc,5000,Dev
