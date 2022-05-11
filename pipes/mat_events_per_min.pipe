@@ -3,17 +3,18 @@ SQL >
 
     SELECT 
       toStartOfMinute(datetime) minute,
+      company_id,
       name,
       event,
       count() total_events
     FROM kafka_audit_log
     JOIN companies 
     USING company_id
-    GROUP BY minute, name, event
+    GROUP BY minute, name, event, company_id
 
 TYPE materialized
 DATASOURCE events_per_min_mv
 ENGINE "AggregatingMergeTree"
 ENGINE_PARTITION_KEY "toYYYYMM(minute)"
-ENGINE_SORTING_KEY "name, minute, event"
+ENGINE_SORTING_KEY "company_id, name, minute, event"
 

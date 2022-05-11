@@ -7,9 +7,9 @@ DESCRIPTION >
 NODE company_ids
 SQL >
 
-    select 'All' values
+    select 'All' values, 0 company_id
     union all
-    SELECT distinct name values FROM companies
+    SELECT name values, company_id FROM companies
     ORDER BY name ASC
 
 
@@ -17,9 +17,10 @@ SQL >
 NODE events
 SQL >
 
-    select 'All' values
-    union all
-    SELECT distinct toString(event) FROM kafka_audit_log
+    SELECT 'All' AS values
+    UNION ALL
+    SELECT DISTINCT toString(event)
+    FROM kafka_audit_log
     ORDER BY event ASC
 
 
@@ -33,6 +34,7 @@ SQL >
         {% end %}
         SELECT values
         {%if filter == 'companies'%}
+        , company_id
         from company_ids
         {%else%}
         from events

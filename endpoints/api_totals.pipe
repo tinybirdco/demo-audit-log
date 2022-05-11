@@ -7,8 +7,7 @@ DESCRIPTION >
 NODE values
 SQL >
 
-    SELECT
-        count() AS total_events
+    SELECT count() AS total_events
     FROM kafka_audit_log
 
 

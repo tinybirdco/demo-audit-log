@@ -2,18 +2,19 @@ NODE mat_enriched_events_node
 SQL >
 
     SELECT 
-      datetime,
-      name,
-      event,
-      payload_author,
-      payload_entity_id
-    FROM kafka_audit_log
-    join companies
-    using company_id
+          datetime,
+          company_id,
+          name,
+          event,
+          payload_author,
+          payload_entity_id
+        FROM kafka_audit_log
+        join companies
+        using company_id
 
 TYPE materialized
 DATASOURCE enriched_events_mv
 ENGINE "MergeTree"
 ENGINE_PARTITION_KEY "toYYYYMM(datetime)"
-ENGINE_SORTING_KEY "event, name, datetime"
+ENGINE_SORTING_KEY "company_id, datetime, event"
 

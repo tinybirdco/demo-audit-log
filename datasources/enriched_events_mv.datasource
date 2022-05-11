@@ -1,12 +1,13 @@
-# Data Source created from Pipe 'ls_log_message_join'
+# Data Source created from Pipe 'mat_enriched_events'
 
 SCHEMA >
     `datetime` DateTime64(3),
-    `name` LowCardinality(String),
+    `company_id` Int16,
+    `name` String,
     `event` String,
     `payload_author` String,
     `payload_entity_id` String
 
 ENGINE "MergeTree"
 ENGINE_PARTITION_KEY "toYYYYMM(datetime)"
-ENGINE_SORTING_KEY "event, name, datetime"
+ENGINE_SORTING_KEY "company_id, datetime, event"

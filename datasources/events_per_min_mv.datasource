@@ -2,10 +2,11 @@
 
 SCHEMA >
     `minute` DateTime('Etc/UTC'),
-    `name` LowCardinality(String),
+    `company_id` Int16,
+    `name` String,
     `event` String,
     `total_events` SimpleAggregateFunction(sum, UInt64)
 
 ENGINE "AggregatingMergeTree"
 ENGINE_PARTITION_KEY "toYYYYMM(minute)"
-ENGINE_SORTING_KEY "name, minute, event"
+ENGINE_SORTING_KEY "company_id, name, minute, event"
