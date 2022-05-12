@@ -4,6 +4,8 @@ This repository contains the data project —[datasources](./datasources), [pipe
 
 Check out this live session demo [video](https://www.youtube.com/watch?v=C9859uVd6uc&list=PLZGPeFpwVFORWK4W-1sMWzYUcS7fOlaQC&index=1) to see how to work with audit logs from Kafka streams in Tinybird.
 
+And once you've replicated the example in your workspace, try yourself conuming it from the [frontend](https://pocs.tinybird.co/doogle-grive?token=) pasting your token in the URL: `https://pocs.tinybird.co/doogle-grive?token=<your_token>`
+
 To clone the repository:
 
 ```bash
