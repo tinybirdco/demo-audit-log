@@ -6,14 +6,15 @@ import random
 from faker import Faker
 import uuid
 
-def send_event(ds: str, token: str, messages: list):
+def send_event(ds: str, token: str, messages: list, host: str):
   params = {
     'name': ds,
     'token': token,
     'wait': 'false',
+    'host' : host,
   }
   data = '\n'.join(json.dumps(m) for m in messages)
-  r = requests.post('https://api.tinybird.co/v0/events', params=params, data=data)
+  r = requests.post(f'{host}/v0/events', params=params, data=data)
   # uncomment the following two lines in case you don't see your data in the datasource
   # print(r.status_code)
   # print(r.text)
@@ -32,7 +33,9 @@ def send_hfi(datasource,
              ):
  
   with open ("./.tinyb") as tinyb:
-    token = json.load(tinyb)['token']
+    tb = json.load(tinyb)
+    token = tb['token']
+    host = tb['host']
    
   fake = Faker()
 
@@ -71,11 +74,11 @@ def send_hfi(datasource,
         }
       nd.append(message) 
       if len(nd) == events:
-        send_event(datasource, token, nd)
+        send_event(datasource, token, nd, host)
         nd = []
       if not(silent):
        print(message) 
-    send_event(datasource, token, nd)
+    send_event(datasource, token, nd, host)
     nd = []
 
 
